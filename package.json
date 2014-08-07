@@ -1,0 +1,24 @@
+{
+  "name": "promise",
+  "version": "0.0.1",
+  "description": "promises for the browser and node.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nathanfaucett/promise.git"
+  },
+  "main": "src/index.js",
+  "keywords": [
+    "promise",
+    "promise.js"
+  ],
+  "author": "Nathan Faucett",
+  "license": "BSD-2-Clause",
+  "readmeFilename": "README.md",
+  "devDependencies": {
+    "grunt": "",
+    "grunt-jsbeautifier": ""
+  },
+  "dependencies": {
+    "utils": "git://github.com/nathanfaucett/utils"
+  }
+}
