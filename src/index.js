@@ -1,4 +1,4 @@
-module.exports = typeof(global.Promise) !== "undefined" ? global.Promise : (function() {
+module.exports = typeof(Promise) !== "undefined" ? Promise : (function() {
     var utils = require("utils"),
         slice = Array.prototype.slice;
 
