@@ -1,11 +1,11 @@
 module.exports = typeof(Promise) !== "undefined" ? Promise : (function() {
-    var utils = require("utils"),
+    var type = require("type"),
         slice = Array.prototype.slice;
 
 
     function Handler(onFulfilled, onRejected, resolve, reject) {
-        this.onFulfilled = utils.isFunction(onFulfilled) ? onFulfilled : null;
-        this.onRejected = utils.isFunction(onRejected) ? onRejected : null;
+        this.onFulfilled = type.isFunction(onFulfilled) ? onFulfilled : null;
+        this.onRejected = type.isFunction(onRejected) ? onRejected : null;
         this.resolve = resolve;
         this.reject = reject;
     }
@@ -38,8 +38,8 @@ module.exports = typeof(Promise) !== "undefined" ? Promise : (function() {
         try {
             if (newValue === promise) throw new TypeError("A promise cannot be resolved with itself");
 
-            if (newValue && (utils.isObject(newValue) || utils.isFunction(newValue))) {
-                if (utils.isFunction(newValue.then)) {
+            if (newValue && (type.isObject(newValue) || type.isFunction(newValue))) {
+                if (type.isFunction(newValue.then)) {
                     handleResolve(
                         function resolver(resolve, reject) {
                             newValue.then(resolve, reject);
@@ -113,7 +113,7 @@ module.exports = typeof(Promise) !== "undefined" ? Promise : (function() {
         if (!(this instanceof Promise)) {
             throw new TypeError("Promise(resolver) \"this\" must be an instance of of Promise");
         }
-        if (!utils.isFunction(resolver)) {
+        if (!type.isFunction(resolver)) {
             throw new TypeError("Promise(resolver) You must pass a resolver function as the first argument to the promise constructor");
         }
 
@@ -160,7 +160,7 @@ module.exports = typeof(Promise) !== "undefined" ? Promise : (function() {
     };
 
     Promise.all = function(value) {
-        var args = (arguments.length === 1 && utils.isArray(value)) ? value : slice.call(arguments);
+        var args = (arguments.length === 1 && type.isArray(value)) ? value : slice.call(arguments);
 
         return new Promise(function resolver(resolve, reject) {
             var i = 0,
@@ -175,9 +175,9 @@ module.exports = typeof(Promise) !== "undefined" ? Promise : (function() {
 
             function resolveValue(index, value) {
                 try {
-                    if (value && (utils.isObject(value) || utils.isFunction(value))) {
+                    if (value && (type.isObject(value) || type.isFunction(value))) {
 
-                        if (utils.isFunction(value.then)) {
+                        if (type.isFunction(value.then)) {
                             value.then(function(value) {
                                 resolveValue(index, value);
                             }, reject);
