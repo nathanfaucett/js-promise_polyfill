@@ -1,18 +1,16 @@
-var Promise = typeof(global.Promise) === "undefined" ? null : global.Promise;
-
-
-if (!Promise) {
+module.exports = typeof(global.Promise) !== "undefined" ? global.Promise : (function() {
     var utils = require("utils"),
         slice = Array.prototype.slice;
 
-    var Handler = function(onFulfilled, onRejected, resolve, reject) {
+
+    function Handler(onFulfilled, onRejected, resolve, reject) {
         this.onFulfilled = utils.isFunction(onFulfilled) ? onFulfilled : null;
         this.onRejected = utils.isFunction(onRejected) ? onRejected : null;
         this.resolve = resolve;
         this.reject = reject;
     }
 
-    var handleResolve = function(resolver, onFulfilled, onRejected) {
+    function handleResolve(resolver, onFulfilled, onRejected) {
         var done = false;
 
         try {
@@ -35,7 +33,7 @@ if (!Promise) {
         }
     }
 
-    var resolveValue = function(promise, newValue) {
+    function resolveValue(promise, newValue) {
 
         try {
             if (newValue === promise) throw new TypeError("A promise cannot be resolved with itself");
@@ -64,13 +62,13 @@ if (!Promise) {
         }
     }
 
-    var rejectValue = function(promise, newValue) {
+    function rejectValue(promise, newValue) {
         promise._state = false;
         promise._value = newValue;
         finale(promise);
     }
 
-    var finale = function(promise) {
+    function finale(promise) {
         var handlers = promise._handlers,
             i = 0,
             il = handlers.length;
@@ -79,7 +77,7 @@ if (!Promise) {
         handlers.length = 0;
     }
 
-    var handle = function(promise, handler) {
+    function handle(promise, handler) {
         var state = promise._state;
 
         if (promise._state === null) {
@@ -109,7 +107,7 @@ if (!Promise) {
     }
 
 
-    Promise = function Promise(resolver) {
+    function Promise(resolver) {
         var _this = this;
 
         if (!(this instanceof Promise)) {
@@ -208,7 +206,7 @@ if (!Promise) {
             }
         });
     };
-};
 
 
-module.exports = Promise;
+    return Promise;
+}());
