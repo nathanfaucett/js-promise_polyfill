@@ -159,6 +159,17 @@ module.exports = typeof(Promise) !== "undefined" ? Promise : (function() {
         });
     };
 
+    Promise.defer = function() {
+        var deferred = {};
+
+        deferred.promise = new Promise(function(resolve, reject) {
+            deferred.resolve = resolve;
+            deferred.reject = reject;
+        });
+
+        return deferred;
+    };
+
     Promise.all = function(value) {
         var args = (arguments.length === 1 && type.isArray(value)) ? value : slice.call(arguments);
 
