@@ -1,1 +1,1 @@
-var Promise = global.Promise = require("../src/index.js");
+var PolyPromise = global.PolyPromise = require("../src/index.js");

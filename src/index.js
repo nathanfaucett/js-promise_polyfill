@@ -27,8 +27,9 @@ module.exports = typeof(Promise) !== "undefined" ? Promise : (function() {
                 }
             );
         } catch (e) {
-            if (done) return
-            done = true
+            if (done) return;
+
+            done = true;
             onRejected(e);
         }
     }
@@ -137,7 +138,7 @@ module.exports = typeof(Promise) !== "undefined" ? Promise : (function() {
 
         return new Promise(function resolver(resolve, reject) {
             handle(_this, new Handler(onFulfilled, onRejected, resolve, reject));
-        })
+        });
     };
 
     Promise.prototype["catch"] = function(onRejected) {
