@@ -177,8 +177,7 @@ module.exports = typeof(Promise) !== "undefined" ? Promise : (function() {
         return new Promise(function resolver(resolve, reject) {
             var i = 0,
                 il = args.length,
-                remaining = il,
-                value, then;
+                remaining = il;
 
             if (remaining === 0) {
                 resolve([]);
