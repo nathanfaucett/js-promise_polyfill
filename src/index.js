@@ -1,13 +1,45 @@
-var type = require("type");
+var isArray = require("is_array"),
+    isObject = require("is_object"),
+    isFunction = require("is_function"),
+    createStore = require("create_store"),
+    fastSlice = require("fast_slice");
 
 
-var slice = Array.prototype.slice,
-    PolyPromise = typeof(Promise) !== "undefined" ? Promise : (function() {
+var PolyPromise, PrivatePromise;
 
+
+if (typeof(Promise) !== "undefined") {
+    PolyPromise = Promise;
+} else {
+    PrivatePromise = (function() {
+
+        function PrivatePromise(resolver) {
+            var _this = this;
+
+            this.handlers = [];
+            this.state = null;
+            this.value = null;
+
+            handleResolve(
+                resolver,
+                function resolve(newValue) {
+                    resolveValue(_this, newValue);
+                },
+                function reject(newValue) {
+                    rejectValue(_this, newValue);
+                }
+            );
+        }
+
+        PrivatePromise.store = createStore();
+
+        PrivatePromise.handle = function(_this, onFulfilled, onRejected, resolve, reject) {
+            handle(_this, new Handler(onFulfilled, onRejected, resolve, reject));
+        };
 
         function Handler(onFulfilled, onRejected, resolve, reject) {
-            this.onFulfilled = type.isFunction(onFulfilled) ? onFulfilled : null;
-            this.onRejected = type.isFunction(onRejected) ? onRejected : null;
+            this.onFulfilled = onFulfilled;
+            this.onRejected = onRejected;
             this.resolve = resolve;
             this.reject = reject;
         }
@@ -18,31 +50,37 @@ var slice = Array.prototype.slice,
             try {
                 resolver(
                     function(value) {
-                        if (done) return;
+                        if (done) {
+                            return;
+                        }
                         done = true;
                         onFulfilled(value);
                     },
                     function(reason) {
-                        if (done) return;
+                        if (done) {
+                            return;
+                        }
                         done = true;
                         onRejected(reason);
                     }
                 );
-            } catch (e) {
-                if (done) return;
-
+            } catch (err) {
+                if (done) {
+                    return;
+                }
                 done = true;
-                onRejected(e);
+                onRejected(err);
             }
         }
 
-        function resolveValue(promise, newValue) {
-
+        function resolveValue(_this, newValue) {
             try {
-                if (newValue === promise) throw new TypeError("A promise cannot be resolved with itself");
+                if (newValue === _this) {
+                    throw new TypeError("A promise cannot be resolved with itself");
+                }
 
-                if (newValue && (type.isObject(newValue) || type.isFunction(newValue))) {
-                    if (type.isFunction(newValue.then)) {
+                if (newValue && (isObject(newValue) || isFunction(newValue))) {
+                    if (isFunction(newValue.then)) {
                         handleResolve(
                             function resolver(resolve, reject) {
                                 newValue.then(resolve, reject);
@@ -57,40 +95,43 @@ var slice = Array.prototype.slice,
                         return;
                     }
                 }
-                promise._state = true;
-                promise._value = newValue;
-                finale(promise);
-            } catch (e) {
-                rejectValue(promise, e);
+                _this.state = true;
+                _this.value = newValue;
+                finale(_this);
+            } catch (err) {
+                rejectValue(_this, err);
             }
         }
 
-        function rejectValue(promise, newValue) {
-            promise._state = false;
-            promise._value = newValue;
-            finale(promise);
+        function rejectValue(_this, newValue) {
+            _this.state = false;
+            _this.value = newValue;
+            finale(_this);
         }
 
-        function finale(promise) {
-            var handlers = promise._handlers,
-                i = 0,
-                il = handlers.length;
+        function finale(_this) {
+            var handlers = _this.handlers,
+                i = -1,
+                il = handlers.length - 1;
 
-            for (; i < il; i++) handle(promise, handlers[i]);
+            while (i++ < il) {
+                handle(_this, handlers[i]);
+            }
+
             handlers.length = 0;
         }
 
-        function handle(promise, handler) {
-            var state = promise._state;
+        function handle(_this, handler) {
+            var state = _this.state;
 
-            if (promise._state === null) {
-                promise._handlers.push(handler);
+            if (_this.state === null) {
+                _this.handlers.push(handler);
                 return;
             }
 
             process.nextTick(function nextTick() {
                 var callback = state ? handler.onFulfilled : handler.onRejected,
-                    value = promise._value,
+                    value = _this.value,
                     out;
 
                 if (callback === null) {
@@ -100,8 +141,8 @@ var slice = Array.prototype.slice,
 
                 try {
                     out = callback(value);
-                } catch (e) {
-                    handler.reject(e);
+                } catch (err) {
+                    handler.reject(err);
                     return;
                 }
 
@@ -109,55 +150,42 @@ var slice = Array.prototype.slice,
             });
         }
 
-
-        function Promise(resolver) {
-            var _this = this;
-
-            if (!(this instanceof Promise)) {
-                throw new TypeError("Promise(resolver) \"this\" must be an instance of of Promise");
-            }
-            if (!type.isFunction(resolver)) {
-                throw new TypeError("Promise(resolver) You must pass a resolver function as the first argument to the promise constructor");
-            }
-
-            this._state = null;
-            this._value = null;
-            this._handlers = [];
-
-            handleResolve(
-                resolver,
-                function resolve(newValue) {
-                    resolveValue(_this, newValue);
-                },
-                function reject(newValue) {
-                    rejectValue(_this, newValue);
-                }
-            );
-        }
-
-        Promise.prototype.then = function(onFulfilled, onRejected) {
-            var _this = this;
-
-            return new Promise(function resolver(resolve, reject) {
-                handle(_this, new Handler(onFulfilled, onRejected, resolve, reject));
-            });
-        };
-
-
-        return Promise;
+        return PrivatePromise;
     }());
 
+    PolyPromise = function Promise(resolver) {
 
-if (!type.isFunction(PolyPromise.prototype["catch"])) {
+        if (!(this instanceof PolyPromise)) {
+            throw new TypeError("Promise(resolver) \"this\" must be an instance of of Promise");
+        }
+        if (!isFunction(resolver)) {
+            throw new TypeError("Promise(resolver) You must pass a resolver function as the first argument to the promise constructor");
+        }
+
+        PrivatePromise.store.set(this, new PrivatePromise(resolver));
+    };
+
+    PolyPromise.prototype.then = function(onFulfilled, onRejected) {
+        var _this = PrivatePromise.store.get(this);
+
+        return new PolyPromise(function resolver(resolve, reject) {
+            PrivatePromise.handle(_this, onFulfilled, onRejected, resolve, reject);
+        });
+    };
+}
+
+
+if (!isFunction(PolyPromise.prototype["catch"])) {
     PolyPromise.prototype["catch"] = function(onRejected) {
-
         return this.then(null, onRejected);
     };
 }
 
-if (!type.isFunction(PolyPromise.resolve)) {
+if (!isFunction(PolyPromise.resolve)) {
     PolyPromise.resolve = function(value) {
-        if (value instanceof PolyPromise) return value;
+        if (value instanceof PolyPromise) {
+            return value;
+        }
 
         return new PolyPromise(function resolver(resolve) {
             resolve(value);
@@ -165,7 +193,7 @@ if (!type.isFunction(PolyPromise.resolve)) {
     };
 }
 
-if (!type.isFunction(PolyPromise.reject)) {
+if (!isFunction(PolyPromise.reject)) {
     PolyPromise.reject = function(value) {
         return new PolyPromise(function resolver(resolve, reject) {
             reject(value);
@@ -173,11 +201,11 @@ if (!type.isFunction(PolyPromise.reject)) {
     };
 }
 
-if (!type.isFunction(PolyPromise.defer)) {
+if (!isFunction(PolyPromise.defer)) {
     PolyPromise.defer = function() {
         var deferred = {};
 
-        deferred.promise = new PolyPromise(function(resolve, reject) {
+        deferred.promise = new PolyPromise(function resolver(resolve, reject) {
             deferred.resolve = resolve;
             deferred.reject = reject;
         });
@@ -186,32 +214,29 @@ if (!type.isFunction(PolyPromise.defer)) {
     };
 }
 
-if (!type.isFunction(PolyPromise.all)) {
+if (!isFunction(PolyPromise.all)) {
     PolyPromise.all = function(value) {
-        var args = (arguments.length === 1 && type.isArray(value)) ? value : slice.call(arguments);
+        var args = (arguments.length === 1 && isArray(value)) ? value : fastSlice(arguments);
 
         return new PolyPromise(function resolver(resolve, reject) {
-            var i = 0,
-                il = args.length,
-                remaining = il;
+            var length = args.length,
+                i = -1,
+                il = length - 1;
 
-            if (remaining === 0) {
+            if (length === 0) {
                 resolve([]);
                 return;
             }
 
             function resolveValue(index, value) {
                 try {
-                    if (value && (type.isObject(value) || type.isFunction(value))) {
-
-                        if (type.isFunction(value.then)) {
-                            value.then(function(value) {
-                                resolveValue(index, value);
-                            }, reject);
-                            return;
-                        }
+                    if (value && (isObject(value) || isFunction(value)) && isFunction(value.then)) {
+                        value.then(function(v) {
+                            resolveValue(index, v);
+                        }, reject);
+                        return;
                     }
-                    if (--remaining === 0) {
+                    if (--length === 0) {
                         resolve(args);
                     }
                 } catch (e) {
@@ -219,19 +244,26 @@ if (!type.isFunction(PolyPromise.all)) {
                 }
             }
 
-            for (; i < il; i++) resolveValue(i, args[i]);
+            while (i++ < il) {
+                resolveValue(i, args[i]);
+            }
         });
     };
 }
 
-if (!type.isFunction(PolyPromise.race)) {
+if (!isFunction(PolyPromise.race)) {
     PolyPromise.race = function(values) {
         return new PolyPromise(function resolver(resolve, reject) {
-            var i = 0,
-                il = values.length;
+            var i = -1,
+                il = values.length - 1,
+                value;
 
-            for (; i < il; i++) {
-                values[i].then(resolve, reject);
+            while (i++ < il) {
+                value = values[i];
+
+                if (value && (isObject(value) || isFunction(value)) && isFunction(value.then)) {
+                    value.then(resolve, reject);
+                }
             }
         });
     };
