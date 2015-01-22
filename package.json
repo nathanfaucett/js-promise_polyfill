@@ -1,15 +1,17 @@
 {
-  "name": "promise",
+  "name": "promise_polyfill",
   "version": "0.0.1",
-  "description": "promises for the browser and node.js",
+  "description": "promise polyfill for the browser and node.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nathanfaucett/promise.git"
+    "url": "https://github.com/nathanfaucett/promise_polyfill.git"
   },
   "main": "src/index.js",
   "keywords": [
     "promise",
-    "promise.js"
+    "promise.js",
+    "promise_polyfill",
+    "promise_polyfill.js"
   ],
   "author": "Nathan Faucett",
   "license": "BSD-2-Clause",

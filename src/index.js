@@ -5,11 +5,11 @@ var isArray = require("is_array"),
     fastSlice = require("fast_slice");
 
 
-var PolyPromise, PrivatePromise;
+var PromiseShim, PrivatePromise;
 
 
 if (typeof(Promise) !== "undefined") {
-    PolyPromise = Promise;
+    PromiseShim = Promise;
 } else {
     PrivatePromise = (function() {
 
@@ -153,9 +153,9 @@ if (typeof(Promise) !== "undefined") {
         return PrivatePromise;
     }());
 
-    PolyPromise = function Promise(resolver) {
+    PromiseShim = function Promise(resolver) {
 
-        if (!(this instanceof PolyPromise)) {
+        if (!(this instanceof PromiseShim)) {
             throw new TypeError("Promise(resolver) \"this\" must be an instance of of Promise");
         }
         if (!isFunction(resolver)) {
@@ -165,47 +165,47 @@ if (typeof(Promise) !== "undefined") {
         PrivatePromise.store.set(this, new PrivatePromise(resolver));
     };
 
-    PolyPromise.prototype.then = function(onFulfilled, onRejected) {
+    PromiseShim.prototype.then = function(onFulfilled, onRejected) {
         var _this = PrivatePromise.store.get(this);
 
-        return new PolyPromise(function resolver(resolve, reject) {
+        return new PromiseShim(function resolver(resolve, reject) {
             PrivatePromise.handle(_this, onFulfilled, onRejected, resolve, reject);
         });
     };
 }
 
 
-if (!isFunction(PolyPromise.prototype["catch"])) {
-    PolyPromise.prototype["catch"] = function(onRejected) {
+if (!isFunction(PromiseShim.prototype["catch"])) {
+    PromiseShim.prototype["catch"] = function(onRejected) {
         return this.then(null, onRejected);
     };
 }
 
-if (!isFunction(PolyPromise.resolve)) {
-    PolyPromise.resolve = function(value) {
-        if (value instanceof PolyPromise) {
+if (!isFunction(PromiseShim.resolve)) {
+    PromiseShim.resolve = function(value) {
+        if (value instanceof PromiseShim) {
             return value;
         }
 
-        return new PolyPromise(function resolver(resolve) {
+        return new PromiseShim(function resolver(resolve) {
             resolve(value);
         });
     };
 }
 
-if (!isFunction(PolyPromise.reject)) {
-    PolyPromise.reject = function(value) {
-        return new PolyPromise(function resolver(resolve, reject) {
+if (!isFunction(PromiseShim.reject)) {
+    PromiseShim.reject = function(value) {
+        return new PromiseShim(function resolver(resolve, reject) {
             reject(value);
         });
     };
 }
 
-if (!isFunction(PolyPromise.defer)) {
-    PolyPromise.defer = function() {
+if (!isFunction(PromiseShim.defer)) {
+    PromiseShim.defer = function() {
         var deferred = {};
 
-        deferred.promise = new PolyPromise(function resolver(resolve, reject) {
+        deferred.promise = new PromiseShim(function resolver(resolve, reject) {
             deferred.resolve = resolve;
             deferred.reject = reject;
         });
@@ -214,11 +214,11 @@ if (!isFunction(PolyPromise.defer)) {
     };
 }
 
-if (!isFunction(PolyPromise.all)) {
-    PolyPromise.all = function(value) {
+if (!isFunction(PromiseShim.all)) {
+    PromiseShim.all = function(value) {
         var args = (arguments.length === 1 && isArray(value)) ? value : fastSlice(arguments);
 
-        return new PolyPromise(function resolver(resolve, reject) {
+        return new PromiseShim(function resolver(resolve, reject) {
             var length = args.length,
                 i = -1,
                 il = length - 1;
@@ -251,9 +251,9 @@ if (!isFunction(PolyPromise.all)) {
     };
 }
 
-if (!isFunction(PolyPromise.race)) {
-    PolyPromise.race = function(values) {
-        return new PolyPromise(function resolver(resolve, reject) {
+if (!isFunction(PromiseShim.race)) {
+    PromiseShim.race = function(values) {
+        return new PromiseShim(function resolver(resolve, reject) {
             var i = -1,
                 il = values.length - 1,
                 value;
@@ -270,4 +270,4 @@ if (!isFunction(PolyPromise.race)) {
 }
 
 
-module.exports = PolyPromise;
+module.exports = PromiseShim;
