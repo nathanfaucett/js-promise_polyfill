@@ -38,8 +38,8 @@ if (typeof(Promise) !== "undefined") {
         };
 
         function Handler(onFulfilled, onRejected, resolve, reject) {
-            this.onFulfilled = onFulfilled;
-            this.onRejected = onRejected;
+            this.onFulfilled = isFunction(onFulfilled) ? onFulfilled : null;
+            this.onRejected = isFunction(onRejected) ? onRejected : null;
             this.resolve = resolve;
             this.reject = reject;
         }
