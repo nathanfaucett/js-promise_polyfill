@@ -5,11 +5,11 @@ var isArray = require("is_array"),
     fastSlice = require("fast_slice");
 
 
-var PromiseShim, PrivatePromise;
+var PromisePolyfill, PrivatePromise;
 
 
 if (typeof(Promise) !== "undefined") {
-    PromiseShim = Promise;
+    PromisePolyfill = Promise;
 } else {
     PrivatePromise = (function() {
 
@@ -153,9 +153,9 @@ if (typeof(Promise) !== "undefined") {
         return PrivatePromise;
     }());
 
-    PromiseShim = function Promise(resolver) {
+    PromisePolyfill = function Promise(resolver) {
 
-        if (!(this instanceof PromiseShim)) {
+        if (!(this instanceof PromisePolyfill)) {
             throw new TypeError("Promise(resolver) \"this\" must be an instance of of Promise");
         }
         if (!isFunction(resolver)) {
@@ -165,47 +165,47 @@ if (typeof(Promise) !== "undefined") {
         PrivatePromise.store.set(this, new PrivatePromise(resolver));
     };
 
-    PromiseShim.prototype.then = function(onFulfilled, onRejected) {
+    PromisePolyfill.prototype.then = function(onFulfilled, onRejected) {
         var _this = PrivatePromise.store.get(this);
 
-        return new PromiseShim(function resolver(resolve, reject) {
+        return new PromisePolyfill(function resolver(resolve, reject) {
             PrivatePromise.handle(_this, onFulfilled, onRejected, resolve, reject);
         });
     };
 }
 
 
-if (!isFunction(PromiseShim.prototype["catch"])) {
-    PromiseShim.prototype["catch"] = function(onRejected) {
+if (!isFunction(PromisePolyfill.prototype["catch"])) {
+    PromisePolyfill.prototype["catch"] = function(onRejected) {
         return this.then(null, onRejected);
     };
 }
 
-if (!isFunction(PromiseShim.resolve)) {
-    PromiseShim.resolve = function(value) {
-        if (value instanceof PromiseShim) {
+if (!isFunction(PromisePolyfill.resolve)) {
+    PromisePolyfill.resolve = function(value) {
+        if (value instanceof PromisePolyfill) {
             return value;
         }
 
-        return new PromiseShim(function resolver(resolve) {
+        return new PromisePolyfill(function resolver(resolve) {
             resolve(value);
         });
     };
 }
 
-if (!isFunction(PromiseShim.reject)) {
-    PromiseShim.reject = function(value) {
-        return new PromiseShim(function resolver(resolve, reject) {
+if (!isFunction(PromisePolyfill.reject)) {
+    PromisePolyfill.reject = function(value) {
+        return new PromisePolyfill(function resolver(resolve, reject) {
             reject(value);
         });
     };
 }
 
-if (!isFunction(PromiseShim.defer)) {
-    PromiseShim.defer = function() {
+if (!isFunction(PromisePolyfill.defer)) {
+    PromisePolyfill.defer = function() {
         var deferred = {};
 
-        deferred.promise = new PromiseShim(function resolver(resolve, reject) {
+        deferred.promise = new PromisePolyfill(function resolver(resolve, reject) {
             deferred.resolve = resolve;
             deferred.reject = reject;
         });
@@ -214,11 +214,11 @@ if (!isFunction(PromiseShim.defer)) {
     };
 }
 
-if (!isFunction(PromiseShim.all)) {
-    PromiseShim.all = function(value) {
+if (!isFunction(PromisePolyfill.all)) {
+    PromisePolyfill.all = function(value) {
         var args = (arguments.length === 1 && isArray(value)) ? value : fastSlice(arguments);
 
-        return new PromiseShim(function resolver(resolve, reject) {
+        return new PromisePolyfill(function resolver(resolve, reject) {
             var length = args.length,
                 i = -1,
                 il = length - 1;
@@ -251,9 +251,9 @@ if (!isFunction(PromiseShim.all)) {
     };
 }
 
-if (!isFunction(PromiseShim.race)) {
-    PromiseShim.race = function(values) {
-        return new PromiseShim(function resolver(resolve, reject) {
+if (!isFunction(PromisePolyfill.race)) {
+    PromisePolyfill.race = function(values) {
+        return new PromisePolyfill(function resolver(resolve, reject) {
             var i = -1,
                 il = values.length - 1,
                 value;
@@ -270,4 +270,4 @@ if (!isFunction(PromiseShim.race)) {
 }
 
 
-module.exports = PromiseShim;
+module.exports = PromisePolyfill;
