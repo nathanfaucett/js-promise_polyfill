@@ -19,7 +19,8 @@
   "devDependencies": {
     "grunt": "",
     "grunt-contrib-jshint": "^0.10.0",
-    "grunt-jsbeautifier": ""
+    "grunt-jsbeautifier": "",
+    "mocha": "^2.1.0"
   },
   "dependencies": {
     "create_store": "nathanfaucett/create_store",
