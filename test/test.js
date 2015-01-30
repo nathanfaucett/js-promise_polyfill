@@ -2,37 +2,38 @@ var assert = require("assert");
 
 
 describe("PromisePolyfill", function() {
-    it("should polyfill promise if not present in global", function() {
+    it("should polyfill promise if not present in global", function(done) {
         var PromisePolyfill,
-            value = true;
+            sync = true;
 
         global.Promise = undefined;
         PromisePolyfill = require("../src/index");
 
         new PromisePolyfill(function resolver(resolve, reject) {
             if (Math.random() <= 0.5 ? true : false) {
-                resolve(value);
+                resolve(true);
             } else {
-                reject(value);
+                reject(false);
             }
         }).then(
-            function success() {
-                value = false;
+            function success(value) {
+                sync = false;
+                assert.equal(value, true);
                 return "asdf";
             },
-            function error() {
-                value = false;
-                return "fdsa";
+            function error(value) {
+                sync = false;
+                assert.equal(value, false);
+                done();
             }
         ).then(
             function success(value) {
+                sync = false;
                 assert.equal(value, "asdf");
-            },
-            function error() {
-                assert.equal(value, "fdsa");
+                done();
             }
         );
 
-        assert.equal(value, true);
+        assert.equal(sync, true);
     });
 });
