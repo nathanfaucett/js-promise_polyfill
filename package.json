@@ -7,6 +7,9 @@
     "url": "https://github.com/nathanfaucett/promise_polyfill.git"
   },
   "main": "src/index.js",
+  "scripts": {
+    "test": "mocha"
+  },
   "keywords": [
     "promise",
     "promise.js",
@@ -14,19 +17,19 @@
     "promise_polyfill.js"
   ],
   "author": "Nathan Faucett",
-  "license": "BSD-2-Clause",
+  "license": "MIT",
   "readmeFilename": "README.md",
   "devDependencies": {
-    "grunt": "",
-    "grunt-contrib-jshint": "^0.10.0",
-    "grunt-jsbeautifier": "",
-    "mocha": "^2.1.0"
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^0.11.3",
+    "grunt-jsbeautifier": "^0.2.10",
+    "mocha": "^2.3.3"
   },
   "dependencies": {
-    "create_store": "nathanfaucett/create_store",
-    "fast_slice": "nathanfaucett/fast_slice",
-    "is_array": "nathanfaucett/is_array",
-    "is_object": "nathanfaucett/is_object",
-    "is_function": "nathanfaucett/is_function"
+    "create_store": "git://github.com/nathanfaucett/create_store.git",
+    "fast_slice": "git://github.com/nathanfaucett/fast_slice.git",
+    "is_array": "git://github.com/nathanfaucett/is_array.git",
+    "is_object": "git://github.com/nathanfaucett/is_object.git",
+    "is_function": "git://github.com/nathanfaucett/is_function.git"
   }
 }
