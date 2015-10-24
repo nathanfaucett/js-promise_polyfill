@@ -8,7 +8,10 @@
   },
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "npm run test-node",
+    "test-node": "node ./test | ./node_modules/.bin/tap-spec",
+    "test-node-raw": "node ./test",
+    "test-browser-local": "zuul --local 8080 --ui tape -- ./test"
   },
   "keywords": [
     "promise",
@@ -20,12 +23,15 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-contrib-jshint": "^0.11.3",
-    "grunt-jsbeautifier": "^0.2.10",
-    "mocha": "^2.3.3"
+      "grunt": "^0.4.5",
+      "grunt-contrib-jshint": "^0.11.3",
+      "grunt-jsbeautifier": "^0.2.10",
+      "tap-spec": "^4.1.0",
+      "tape": "^4.2.0",
+      "zuul": "^3.6.0"
   },
   "dependencies": {
+    "is_null": "git://github.com/nathanfaucett/is_null.git",
     "create_store": "git://github.com/nathanfaucett/create_store.git",
     "fast_slice": "git://github.com/nathanfaucett/fast_slice.git",
     "is_array": "git://github.com/nathanfaucett/is_array.git",

@@ -1,4 +1,5 @@
-var isArray = require("is_array"),
+var isNull = require("is_null"),
+    isArray = require("is_array"),
     isObject = require("is_object"),
     isFunction = require("is_function"),
     createStore = require("create_store"),
@@ -11,7 +12,7 @@ var PromisePolyfill, PrivatePromise;
 if (typeof(Promise) !== "undefined") {
     PromisePolyfill = Promise;
 } else {
-    PrivatePromise = (function() {
+    PrivatePromise = (function createPrivatePromise() {
 
         function PrivatePromise(resolver) {
             var _this = this;
@@ -50,26 +51,23 @@ if (typeof(Promise) !== "undefined") {
             try {
                 resolver(
                     function(value) {
-                        if (done) {
-                            return;
+                        if (!done) {
+                            done = true;
+                            onFulfilled(value);
                         }
-                        done = true;
-                        onFulfilled(value);
                     },
                     function(reason) {
-                        if (done) {
-                            return;
+                        if (!done) {
+                            done = true;
+                            onRejected(reason);
                         }
-                        done = true;
-                        onRejected(reason);
                     }
                 );
             } catch (err) {
-                if (done) {
-                    return;
+                if (!done) {
+                    done = true;
+                    onRejected(err);
                 }
-                done = true;
-                onRejected(err);
             }
         }
 
@@ -77,29 +75,29 @@ if (typeof(Promise) !== "undefined") {
             try {
                 if (newValue === _this) {
                     throw new TypeError("A promise cannot be resolved with itself");
-                }
-
-                if (newValue && (isObject(newValue) || isFunction(newValue))) {
-                    if (isFunction(newValue.then)) {
-                        handleResolve(
-                            function resolver(resolve, reject) {
-                                newValue.then(resolve, reject);
-                            },
-                            function resolve(newValue) {
-                                resolveValue(_this, newValue);
-                            },
-                            function reject(newValue) {
-                                rejectValue(_this, newValue);
-                            }
-                        );
-                        return;
+                } else {
+                    if (newValue && (isObject(newValue) || isFunction(newValue))) {
+                        if (isFunction(newValue.then)) {
+                            handleResolve(
+                                function resolver(resolve, reject) {
+                                    newValue.then(resolve, reject);
+                                },
+                                function resolve(newValue) {
+                                    resolveValue(_this, newValue);
+                                },
+                                function reject(newValue) {
+                                    rejectValue(_this, newValue);
+                                }
+                            );
+                            return;
+                        }
                     }
+                    _this.state = true;
+                    _this.value = newValue;
+                    finale(_this);
                 }
-                _this.state = true;
-                _this.value = newValue;
-                finale(_this);
-            } catch (err) {
-                rejectValue(_this, err);
+            } catch (error) {
+                rejectValue(_this, error);
             }
         }
 
@@ -124,30 +122,30 @@ if (typeof(Promise) !== "undefined") {
         function handle(_this, handler) {
             var state = _this.state;
 
-            if (_this.state === null) {
+            if (isNull(_this.state)) {
                 _this.handlers.push(handler);
-                return;
+            } else {
+                process.nextTick(function onNextTick() {
+                    var callback = state ? handler.onFulfilled : handler.onRejected,
+                        value = _this.value,
+                        out;
+
+                    if (isNull(callback)) {
+                        if (state) {
+                            handler.resolve(value);
+                        } else {
+                            handler.reject(value);
+                        }
+                    } else {
+                        try {
+                            out = callback(value);
+                            handler.resolve(out);
+                        } catch (err) {
+                            handler.reject(err);
+                        }
+                    }
+                });
             }
-
-            process.nextTick(function nextTick() {
-                var callback = state ? handler.onFulfilled : handler.onRejected,
-                    value = _this.value,
-                    out;
-
-                if (callback === null) {
-                    (state ? handler.resolve : handler.reject)(value);
-                    return;
-                }
-
-                try {
-                    out = callback(value);
-                } catch (err) {
-                    handler.reject(err);
-                    return;
-                }
-
-                handler.resolve(out);
-            });
         }
 
         return PrivatePromise;
@@ -156,7 +154,7 @@ if (typeof(Promise) !== "undefined") {
     PromisePolyfill = function Promise(resolver) {
 
         if (!(this instanceof PromisePolyfill)) {
-            throw new TypeError("Promise(resolver) \"this\" must be an instance of of Promise");
+            throw new TypeError("Promise(resolver) \"this\" must be an instance of Promise");
         }
         if (!isFunction(resolver)) {
             throw new TypeError("Promise(resolver) You must pass a resolver function as the first argument to the promise constructor");
