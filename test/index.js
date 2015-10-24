@@ -45,7 +45,13 @@ tape("PromisePolyfill() should polyfill promise if not present in global", funct
                 if (error) {
                     assert.end(error);
                 } else {
-                    assert.end();
+                    run(PromisePolyfill, true, function onDone(error) {
+                        if (error) {
+                            assert.end(error);
+                        } else {
+                            assert.end();
+                        }
+                    });
                 }
             });
         }
