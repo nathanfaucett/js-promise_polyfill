@@ -7,6 +7,7 @@ tape("PromisePolyfill() should polyfill promise if not present in global", funct
 
     global.Promise = undefined;
     PromisePolyfill = require("..");
+    global.Promise = Promise;
 
     function run(Promise, value, callback) {
         var sync = true;
