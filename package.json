@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "is_null": "git://github.com/nathanfaucett/is_null.git",
-    "create_store": "git://github.com/nathanfaucett/create_store.git",
+    "weak_map_polyfill": "git://github.com/nathanfaucett/weak_map_polyfill.git",
     "fast_slice": "git://github.com/nathanfaucett/fast_slice.git",
     "is_array": "git://github.com/nathanfaucett/is_array.git",
     "is_object": "git://github.com/nathanfaucett/is_object.git",

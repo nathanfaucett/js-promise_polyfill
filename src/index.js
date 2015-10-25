@@ -2,15 +2,28 @@ var isNull = require("is_null"),
     isArray = require("is_array"),
     isObject = require("is_object"),
     isFunction = require("is_function"),
-    createStore = require("create_store"),
+    WeakMapPolyfill = require("weak_map_polyfill"),
     fastSlice = require("fast_slice");
 
 
-var PromisePolyfill, PrivatePromise;
+var PromisePolyfill, PromisePolyfillPrototype, PrivatePromise;
 
 
-if (typeof(Promise) !== "undefined") {
+if (
+    typeof(Promise) !== "undefined" &&
+    (function isValidPromise() {
+        try {
+            new Promise(function resolver(resolve) {
+                resolve(true);
+            }).then(function onThen() {});
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }())
+) {
     PromisePolyfill = Promise;
+    PromisePolyfillPrototype = PromisePolyfill.prototype;
 } else {
     PrivatePromise = (function createPrivatePromise() {
 
@@ -32,7 +45,7 @@ if (typeof(Promise) !== "undefined") {
             );
         }
 
-        PrivatePromise.store = createStore();
+        PrivatePromise.store = new WeakMapPolyfill();
 
         PrivatePromise.handle = function(_this, onFulfilled, onRejected, resolve, reject) {
             handle(_this, new Handler(onFulfilled, onRejected, resolve, reject));
@@ -153,9 +166,6 @@ if (typeof(Promise) !== "undefined") {
 
     PromisePolyfill = function Promise(resolver) {
 
-        if (!(this instanceof PromisePolyfill)) {
-            throw new TypeError("Promise(resolver) \"this\" must be an instance of Promise");
-        }
         if (!isFunction(resolver)) {
             throw new TypeError("Promise(resolver) You must pass a resolver function as the first argument to the promise constructor");
         }
@@ -163,7 +173,9 @@ if (typeof(Promise) !== "undefined") {
         PrivatePromise.store.set(this, new PrivatePromise(resolver));
     };
 
-    PromisePolyfill.prototype.then = function(onFulfilled, onRejected) {
+    PromisePolyfillPrototype = PromisePolyfill.prototype;
+
+    PromisePolyfillPrototype.then = function(onFulfilled, onRejected) {
         var _this = PrivatePromise.store.get(this);
 
         return new PromisePolyfill(function resolver(resolve, reject) {
@@ -172,10 +184,9 @@ if (typeof(Promise) !== "undefined") {
     };
 }
 
-
-if (!isFunction(PromisePolyfill.prototype["catch"])) {
-    PromisePolyfill.prototype["catch"] = function(onRejected) {
-        return this.then(null, onRejected);
+if (!isFunction(PromisePolyfillPrototype["catch"])) {
+    PromisePolyfillPrototype["catch"] = function(reject) {
+        return this.then(null, reject);
     };
 }
 

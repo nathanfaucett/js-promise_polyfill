@@ -1,13 +1,25 @@
 var tape = require("tape");
 
 
+function isValidPromise() {
+    try {
+        new Promise(function resolver(resolve) {
+            resolve(true);
+        }).then(function onThen() {});
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+
 tape("PromisePolyfill() should polyfill promise if not present in global", function(assert) {
-    var Promise = global.Promise,
+    var Promise = isValidPromise() ? global.Promise : undefined,
         PromisePolyfill;
 
     global.Promise = undefined;
-    PromisePolyfill = require("..");
-    global.Promise = Promise;
+    global.PromisePolyfill = PromisePolyfill = require("..");
+    global.Promise = Promise = Promise || PromisePolyfill;
 
     function run(Promise, value, callback) {
         var sync = true;
