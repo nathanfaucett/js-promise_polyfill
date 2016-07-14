@@ -1,7 +1,7 @@
 {
   "name": "@nathanfaucett/promise_polyfill",
   "version": "0.0.1",
-  "description": "promise polyfill for the browser and node.js",
+  "description": "Promise polyfill for the browser and node.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/nathanfaucett/promise_polyfill.git"
