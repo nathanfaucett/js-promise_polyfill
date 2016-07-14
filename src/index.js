@@ -1,9 +1,9 @@
-var isNull = require("is_null"),
-    isArray = require("is_array"),
-    isObject = require("is_object"),
-    isFunction = require("is_function"),
-    WeakMapPolyfill = require("weak_map_polyfill"),
-    fastSlice = require("fast_slice");
+var isNull = require("@nathanfaucett/is_null"),
+    isArray = require("@nathanfaucett/is_array"),
+    isObject = require("@nathanfaucett/is_object"),
+    isFunction = require("@nathanfaucett/is_function"),
+    WeakMapPolyfill = require("@nathanfaucett/weak_map_polyfill"),
+    fastSlice = require("@nathanfaucett/fast_slice");
 
 
 var PromisePolyfill, PromisePolyfillPrototype, PrivatePromise;

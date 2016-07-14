@@ -1,5 +1,5 @@
 {
-  "name": "promise_polyfill",
+  "name": "@nathanfaucett/promise_polyfill",
   "version": "0.0.1",
   "description": "promise polyfill for the browser and node.js",
   "repository": {
@@ -23,19 +23,19 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "devDependencies": {
-      "grunt": "^0.4.5",
-      "grunt-contrib-jshint": "^0.11.3",
-      "grunt-jsbeautifier": "^0.2.10",
+      "grunt": "^1.0.1",
+      "grunt-contrib-jshint": "^1.0.0",
+      "grunt-jsbeautifier": "^0.2.13",
       "tap-spec": "^4.1.0",
       "tape": "^4.2.0",
       "zuul": "^3.6.0"
   },
   "dependencies": {
-    "is_null": "git://github.com/nathanfaucett/is_null.git",
-    "weak_map_polyfill": "git://github.com/nathanfaucett/weak_map_polyfill.git",
-    "fast_slice": "git://github.com/nathanfaucett/fast_slice.git",
-    "is_array": "git://github.com/nathanfaucett/is_array.git",
-    "is_object": "git://github.com/nathanfaucett/is_object.git",
-    "is_function": "git://github.com/nathanfaucett/is_function.git"
+    "@nathanfaucett/is_null": "^0.0.1",
+    "@nathanfaucett/weak_map_polyfill": "^0.0.1",
+    "@nathanfaucett/fast_slice": "^0.0.1",
+    "@nathanfaucett/is_array": "^0.0.1",
+    "@nathanfaucett/is_object": "^0.0.1",
+    "@nathanfaucett/is_function": "^0.0.1"
   }
 }
