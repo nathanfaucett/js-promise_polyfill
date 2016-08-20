@@ -6,7 +6,7 @@ var isNull = require("@nathanfaucett/is_null"),
     fastSlice = require("@nathanfaucett/fast_slice");
 
 
-var PromisePolyfill, PromisePolyfillPrototype, PrivatePromise;
+var PromisePolyfill, PromisePolyfillPrototype, PrivatePromise, Defer;
 
 
 if (
@@ -211,15 +211,20 @@ if (!isFunction(PromisePolyfill.reject)) {
 }
 
 if (!isFunction(PromisePolyfill.defer)) {
-    PromisePolyfill.defer = function() {
-        var deferred = {};
+    Defer = function Defer() {
+        var _this = this;
 
-        deferred.promise = new PromisePolyfill(function resolver(resolve, reject) {
-            deferred.resolve = resolve;
-            deferred.reject = reject;
+        this.resolve = null;
+        this.reject = null;
+
+        this.promise = new PromisePolyfill(function resolver(resolve, reject) {
+            _this.resolve = resolve;
+            _this.reject = reject;
         });
+    };
 
-        return deferred;
+    PromisePolyfill.defer = function() {
+        return new Defer();
     };
 }
 
@@ -230,31 +235,31 @@ if (!isFunction(PromisePolyfill.all)) {
         return new PromisePolyfill(function resolver(resolve, reject) {
             var length = args.length,
                 i = -1,
-                il = length - 1;
+                il = length - 1,
+                resolveValue;
 
             if (length === 0) {
                 resolve([]);
-                return;
-            }
+            } else {
+                resolveValue = function resolveValue(index, value) {
+                    try {
+                        if (value && (isObject(value) || isFunction(value)) && isFunction(value.then)) {
+                            value.then(function onThen(v) {
+                                resolveValue(index, v);
+                            }, reject);
+                            return;
+                        }
+                        if (--length === 0) {
+                            resolve(args);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                };
 
-            function resolveValue(index, value) {
-                try {
-                    if (value && (isObject(value) || isFunction(value)) && isFunction(value.then)) {
-                        value.then(function(v) {
-                            resolveValue(index, v);
-                        }, reject);
-                        return;
-                    }
-                    if (--length === 0) {
-                        resolve(args);
-                    }
-                } catch (e) {
-                    reject(e);
+                while (i++ < il) {
+                    resolveValue(i, args[i]);
                 }
-            }
-
-            while (i++ < il) {
-                resolveValue(i, args[i]);
             }
         });
     };
