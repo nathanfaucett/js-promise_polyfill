@@ -2,8 +2,10 @@ var isNull = require("@nathanfaucett/is_null"),
     isArray = require("@nathanfaucett/is_array"),
     isObject = require("@nathanfaucett/is_object"),
     isFunction = require("@nathanfaucett/is_function"),
+    apply = require("@nathanfaucett/apply"),
     WeakMapPolyfill = require("@nathanfaucett/weak_map_polyfill"),
-    fastSlice = require("@nathanfaucett/fast_slice");
+    fastSlice = require("@nathanfaucett/fast_slice"),
+    Iterator = require("@nathanfaucett/iterator");
 
 
 var PromisePolyfill, PromisePolyfillPrototype, PrivatePromise, Defer;
@@ -230,56 +232,102 @@ if (!isFunction(PromisePolyfill.defer)) {
 
 if (!isFunction(PromisePolyfill.all)) {
     PromisePolyfill.all = function(value) {
-        var args = (arguments.length === 1 && isArray(value)) ? value : fastSlice(arguments);
+        var values = (arguments.length === 1 && isArray(value)) ? value : fastSlice(arguments);
 
         return new PromisePolyfill(function resolver(resolve, reject) {
-            var length = args.length,
-                i = -1,
-                il = length - 1,
-                resolveValue;
+            var iterator = Iterator.getIterator(values),
+                called = false,
+                count = 0,
+                it, step, value, resolveFn, rejectFn, results;
 
-            if (length === 0) {
-                resolve([]);
-            } else {
-                resolveValue = function resolveValue(index, value) {
-                    try {
-                        if (value && (isObject(value) || isFunction(value)) && isFunction(value.then)) {
-                            value.then(function onThen(v) {
-                                resolveValue(index, v);
-                            }, reject);
-                            return;
+            if (iterator) {
+                it = iterator.call(values);
+
+                resolveFn = function resolveFn(value) {
+                    if (!called) {
+                        results = results || [];
+                        results[results.length] = value;
+
+                        if (--count === 0) {
+                            called = true;
+                            resolve(results);
                         }
-                        if (--length === 0) {
-                            resolve(args);
-                        }
-                    } catch (e) {
-                        reject(e);
+                    }
+                };
+                rejectFn = function rejectFn(value) {
+                    if (!called) {
+                        called = true;
+                        reject(value);
                     }
                 };
 
-                while (i++ < il) {
-                    resolveValue(i, args[i]);
+                while (!(step = it.next()).done) {
+                    count++;
+                    value = step.value;
+
+                    if (value && isFunction(value.then)) {
+                        value.then(resolveFn, rejectFn);
+                    } else {
+                        resolveFn(value);
+                    }
                 }
+            } else {
+                reject(new Error("Invalid Iterator " + typeof(values)));
             }
         });
     };
 }
 
 if (!isFunction(PromisePolyfill.race)) {
-    PromisePolyfill.race = function(values) {
+    PromisePolyfill.race = function(value) {
+        var values = (arguments.length === 1 && isArray(value)) ? value : fastSlice(arguments);
+
         return new PromisePolyfill(function resolver(resolve, reject) {
-            var i = -1,
-                il = values.length - 1,
-                value;
+            var iterator = Iterator.getIterator(values),
+                it, step, value;
 
-            while (i++ < il) {
-                value = values[i];
+            if (iterator) {
+                it = iterator.call(values);
 
-                if (value && (isObject(value) || isFunction(value)) && isFunction(value.then)) {
-                    value.then(resolve, reject);
+                while (!(step = it.next()).done) {
+                    value = step.value;
+
+                    if (value && isFunction(value.then)) {
+                        value.then(resolve, reject);
+                    } else {
+                        resolve(value);
+                    }
                 }
+            } else {
+                reject(new Error("Invalid Iterator " + typeof(values)));
             }
         });
+    };
+}
+
+if (!isFunction(PromisePolyfill.promisify)) {
+    PromisePolyfill.promisify = function(fn, thisArg) {
+        return function promisified() {
+            var defer = PromisePolyfill.defer(),
+                args = fastSlice(arguments);
+
+            function callback(error, value) {
+                if (error) {
+                    return defer.reject(error);
+                } else {
+                    if (arguments.length < 3) {
+                        return defer.resolve(value);
+                    } else {
+                        return defer.resolve(fastSlice(arguments, 1));
+                    }
+                }
+            }
+
+            args[args.length] = callback;
+            apply(fn, args, thisArg);
+
+            return defer.promise;
+        };
     };
 }
 

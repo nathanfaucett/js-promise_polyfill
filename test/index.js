@@ -75,3 +75,33 @@ tape("PromisePolyfill() should polyfill promise if not present in global", funct
         }
     });
 });
+
+tape("PromisePolyfill.all(iterable) returns a promise that resolves when all of the promises in the iterable", function(assert) {
+    var PromisePolyfill = require("..");
+
+    PromisePolyfill.all([
+        PromisePolyfill.resolve(true),
+        true,
+        PromisePolyfill.resolve(true)
+    ]).then(function(values) {
+        assert.deepEquals(values, [true, true, true]);
+        assert.end();
+    }, function(error) {
+        assert.end(error);
+    });
+});
+
+tape("PromisePolyfill.race(iterable) method returns a promise that resolves or rejects as soon as one of the promises in the iterable resolves or rejects", function(assert) {
+    var PromisePolyfill = require("..");
+
+    PromisePolyfill.race([
+        PromisePolyfill.resolve(false),
+        true,
+        PromisePolyfill.resolve(false)
+    ]).then(function(value) {
+        assert.equals(value, true);
+        assert.end();
+    }, function(error) {
+        assert.end(error);
+    });
+});
