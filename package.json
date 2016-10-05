@@ -1,6 +1,6 @@
 {
   "name": "@nathanfaucett/promise_polyfill",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Promise polyfill for the browser and node.js",
   "repository": {
     "type": "git",
@@ -23,7 +23,7 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "devDependencies": {
-    "@nathanfaucett/task": "^0.0.5",
+    "@nathanfaucett/task": "^0.0.7",
     "gulp-jsbeautifier": "^2.0.3",
     "gulp-jshint": "^2.0.1",
     "jshint": "^2.9.3",
@@ -38,7 +38,7 @@
     "@nathanfaucett/is_function": "^0.0.1",
     "@nathanfaucett/is_null": "^0.0.1",
     "@nathanfaucett/is_object": "^0.0.1",
-    "@nathanfaucett/iterator": "0.0.1",
-    "@nathanfaucett/weak_map_polyfill": "^0.0.1"
+    "@nathanfaucett/iterator": "^0.0.2",
+    "@nathanfaucett/weak_map_polyfill": "^0.0.2"
   }
 }
